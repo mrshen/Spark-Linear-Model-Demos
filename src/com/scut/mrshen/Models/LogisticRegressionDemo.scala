@@ -10,21 +10,22 @@ import org.apache.log4j.Level
 import org.apache.log4j.Logger
 import breeze.macros.expand.args
 import org.apache.spark.mllib.regression.LabeledPoint
+import com.scut.mrshen.Config.SparkConfig
 
 class LogisticRegressionDemo {
-    def run(dataPath: String, masterUrl: String, args: Array[String]):Double={
-        Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
-        Logger.getLogger("org.eclipse.jetty.server").setLevel(Level.OFF)
+    def run(filename: String, args: Array[String]):String={
+        Logger.getLogger(SparkConfig.APACHE_SPARK).setLevel(Level.WARN)
+        Logger.getLogger(SparkConfig.JETTY_SERVER).setLevel(Level.OFF)
         
         val conf = new SparkConf()
-            .setMaster(masterUrl)
-            .setJars(Array("/usr/local/spark/SparkMlModel.jar"))
-            .set("spark.executor.memory", "6G")
-            .set("spark.driver.memory", "6G")
-            .setAppName("LR with L-BFGS")
+            .setMaster(SparkConfig.MASTER_URL)
+            .setJars(Array(SparkConfig.RUNNABLE_JAR))
+            .set(SparkConfig.EXECUTOR_MEMORY_KEY, SparkConfig.EXECUTOR_MEMORY_VAL)
+            .set(SparkConfig.DRIVER_MEMORY_KEY, SparkConfig.DRIVER_MEMORY_VAL)
+            .setAppName("LogisticRegression with L-BFGS")
             
         val sc = new SparkContext(conf)
-        val data = MLUtils.loadLibSVMFile(sc, dataPath)
+        val data = MLUtils.loadLibSVMFile(sc, SparkConfig.HDFS_ROOT_PATH + filename)
         
         val splits = data.randomSplit(Array(args(0).toDouble, args(1).toDouble), seed = 11L)
         val training = splits(0).cache()
@@ -46,6 +47,6 @@ class LogisticRegressionDemo {
 //        println("Precision = " + precision)
         
         sc.stop()
-        return precision
+        return new String("LogisticRegression Precision = " + precision)
     }
 }
